@@ -16,20 +16,20 @@ class MiniTransformerLayer(nn.Module):
             nn.ReLU(),
             nn.Linear(d_ff, d_model),
         )
-        self.ln1 = nn.LayerNorm(d_model)
-        self.ln2 = nn.LayerNorm(d_model)
+        self.ln1  = nn.LayerNorm(d_model)
+        self.ln2  = nn.LayerNorm(d_model)
         self.drop = nn.Dropout(p_drop)
 
     def forward(self, x, padding_mask=None):
         # --- block 1: self-attention residual ---
-        x_norm = self.ln1(x)
+        x_norm      = self.ln1(x)
         attn_out, _ = self.mha(x_norm, x_norm, x_norm, key_padding_mask=padding_mask)
-        x = x + self.drop(attn_out)
+        x           = x + self.drop(attn_out)
 
         # --- block 2: feed-forward residual ---
         y_norm = self.ln2(x)
         ff_out = self.ff(y_norm)
-        x = x + self.drop(ff_out)
+        x      = x + self.drop(ff_out)
         return x
 
 class TinyTransformer(nn.Module):
@@ -41,8 +41,8 @@ class TinyTransformer(nn.Module):
                  d_ff=256,
                  max_len=17):
         super().__init__()
-        self.embed = nn.Embedding(vocab_size, d_model)
-        self.pos   = PositionalEncoding(d_model, max_len=max_len)
+        self.embed  = nn.Embedding(vocab_size, d_model)
+        self.pos    = PositionalEncoding(d_model, max_len=max_len)
         self.layers = nn.ModuleList(
             [MiniTransformerLayer(d_model, num_heads, d_ff) for _ in range(n_layers)]
         )
