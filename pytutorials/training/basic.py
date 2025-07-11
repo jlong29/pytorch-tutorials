@@ -17,8 +17,8 @@ def run_epoch(model, loader, criterion, optimizer=None, train=True, device=None)
     total, correct = 0, 0
 
     for inp, tgt in loader:
-        inp = inp.to(device)
-        tgt = tgt.to(device)
+        inp  = inp.to(device)
+        tgt  = tgt.to(device)
         mask = make_padding_mask(inp).to(device)
 
         logits = model(inp, padding_mask=mask)          # (batch, seq, vocab)
@@ -31,9 +31,9 @@ def run_epoch(model, loader, criterion, optimizer=None, train=True, device=None)
 
         # crude accuracy (ignoring PAD & SOS)
         with torch.no_grad():
-            preds = logits.argmax(-1)
-            valid = tgt.ne(CHAR2IDX[PAD_TOKEN])
+            preds    = logits.argmax(-1)
+            valid    = tgt.ne(CHAR2IDX[PAD_TOKEN])
             correct += (preds.eq(tgt) & valid).sum().item()
-            total += valid.sum().item()
+            total   += valid.sum().item()
 
     return loss.item(), correct / total

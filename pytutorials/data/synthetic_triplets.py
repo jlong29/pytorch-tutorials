@@ -3,6 +3,7 @@ from torch.utils.data import Dataset
 import numpy as np
 
 # Global constants
+VOCAB_SIZE  = 64
 SEQ_LEN     = 30
 NUM_CLASSES = 10
 
@@ -39,9 +40,9 @@ class SyntheticDisentangleDataset(Dataset):
                 tokens.append((color, shape, pos))
                 target.append(TOKEN_TO_ID[color])  # reverse color prediction task
             self.data.append((tokens, target[::-1]))
-    
+
     def __len__(self): return self.size
-    
+
     def __getitem__(self, idx):
         tokens, target = self.data[idx]
         input_ids = []

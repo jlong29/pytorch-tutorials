@@ -10,7 +10,7 @@ class BaselineTransformer(nn.Module):
         super().__init__()
         self.nhead        = nhead
         self.embedding    = nn.Embedding(vocab_size, d_model)
-        self.pos_encoding = PositionalEncoding(d_model)
+        self.pos_encoding = PositionalEncoding(d_model, 500)
         self.layers       = nn.ModuleList([
             TransformerBlock(d_model, nhead, ff_dim, dropout) for _ in range(num_layers)
         ])
@@ -33,11 +33,12 @@ class InfoMaxTransformer(nn.Module):
     def __init__(self, vocab_size, d_model, nhead, num_layers, ff_dim, dropout):
         super().__init__()
         self.embedding    = nn.Embedding(vocab_size, d_model)
-        self.pos_encoding = PositionalEncoding(d_model)
+        self.pos_encoding = PositionalEncoding(d_model, 500)
         self.layers       = nn.ModuleList([
             TransformerBlock(d_model, nhead, ff_dim, dropout) for _ in range(num_layers)
         ])
         self.classifier = nn.Linear(d_model, NUM_CLASSES)
+        self.nheads=nhead
 
     def forward(self, x):
         x = self.embedding(x)
@@ -80,7 +81,7 @@ class InfoMaxTransformer(nn.Module):
             p = attn.clamp(min=1e-9)
             return -(p * p.log()).sum(dim=-1).mean()
 
-        entropy_loss = 0
+        entropy_loss       = 0
         orthogonality_loss = 0
 
         if attn_weights:

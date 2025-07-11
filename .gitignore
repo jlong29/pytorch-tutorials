@@ -171,4 +171,4 @@ cython_debug/
 .pypirc
 
 # Temporary files
-tutorials/transformers/attention_maps/
+notebooks/attention_maps/

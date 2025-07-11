@@ -3,21 +3,21 @@ import torch.nn as nn
 import math
 
 class PositionalEncoding(nn.Module):
-    def __init__(self, d_model: int, max_len: int = 17):  # MAX_LEN + 1
+    def __init__(self, d_model: int, max_len: int = 17):
         super().__init__()
-        pe  = torch.zeros(max_len, d_model)
-        pos = torch.arange(max_len, dtype=torch.float).unsqueeze(1)
-        div = torch.exp(torch.arange(0, d_model, 2) * (-math.log(10000.0) / d_model))
-        pe[:, 0::2] = torch.sin(pos * div)
-        pe[:, 1::2] = torch.cos(pos * div)
-        self.register_buffer("pe", pe)
+        pe          = torch.zeros(max_len, d_model)
+        position    = torch.arange(0, max_len, dtype=torch.float).unsqueeze(1)
+        div_term    = torch.exp(torch.arange(0, d_model, 2).float() * (-math.log(10000.0) / d_model))
+        pe[:, 0::2] = torch.sin(position * div_term)
+        pe[:, 1::2] = torch.cos(position * div_term)
+        self.register_buffer("pe", pe.unsqueeze(0))  # (1, max_len, d_model)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """
-        x : (seq, batch, d_model)
+        x : (batch, seq_len, d_model)
         returns x + P (adds positional encoding)
         """
-        x = x + self.pe[:x.size(0)].unsqueeze(1)
+        x = x + self.pe[:, :x.size(1)].to(x.device)
         return x
 
 # ---- Transformer Block with Pre-Norm ----
@@ -42,7 +42,7 @@ class TransformerBlock(nn.Module):
             average_attn_weights=False,
             attn_mask=attn_mask
         )
-        
+
         # Residual Pre-norm
         x        = x + self.dropout(attn_output)
         ff_input = self.ln2(x)

@@ -11,10 +11,8 @@ from pytutorials.data.synthetic_triplets import SyntheticDisentangleDataset, TOK
 from pytutorials.models.infomax import BaselineTransformer, InfoMaxTransformer
 from pytutorials.utils.visualize import compute_entropy_divergence, visualize_attention_heads, plot_metrics
 
-DEVICE     = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
 # ---- Training Loop ----
-def train_model(model, optimizer, criterion, dataloader, model_name="baseline", cur_epoch=0, num_epochs=num_epochs):
+def train_model(model, optimizer, criterion, dataloader, model_name="baseline", cur_epoch=0, num_epochs=30, device=None):
     model.train()
     all_loss, all_entropy, all_entropy_std, all_ortho_loss = [], [], [], []
 
@@ -28,7 +26,7 @@ def train_model(model, optimizer, criterion, dataloader, model_name="baseline", 
     λ_ortho   = λ_ortho_base   * (cur_epoch / num_epochs)     # fade-in
 
     for x, y in dataloader:
-        x, y = x.to(DEVICE), y.to(DEVICE)
+        x, y = x.to(device), y.to(device)
         optimizer.zero_grad()
 
         if model_name == "infomax":
@@ -69,7 +67,7 @@ def train_model(model, optimizer, criterion, dataloader, model_name="baseline", 
     }
 
 # ---- Validation Loop ----
-def eval_model(model, criterion, dataloader, model_name="baseline", cur_epoch=0, num_epochs=30):
+def eval_model(model, criterion, dataloader, model_name="baseline", cur_epoch=0, num_epochs=30, device=None):
     model.eval()
     all_loss, all_entropy, all_entropy_std, all_ortho_loss = [], [], [], []
 
@@ -83,7 +81,7 @@ def eval_model(model, criterion, dataloader, model_name="baseline", cur_epoch=0,
 
     with torch.no_grad():
         for x, y in dataloader:
-            x, y = x.to(DEVICE), y.to(DEVICE)
+            x, y = x.to(device), y.to(device)
 
             if model_name == "infomax":
                 output, attn_maps, layer_outputs = model(x)
@@ -125,8 +123,8 @@ def run_experiment(d_model=256, nhead=4, num_layers=3, ff_dim=1024, dropout=0.1,
     train_loader = DataLoader(SyntheticDisentangleDataset(5000), batch_size=64, shuffle=True)
     val_loader   = DataLoader(SyntheticDisentangleDataset(1000), batch_size=64)
 
-    baseline     = BaselineTransformer(vocab_size, d_model, nhead, num_layers, ff_dim, dropout).to(DEVICE)
-    infomax      = InfoMaxTransformer(vocab_size, d_model, nhead, num_layers, ff_dim, dropout).to(DEVICE)
+    baseline     = BaselineTransformer(vocab_size, d_model, nhead, num_layers, ff_dim, dropout)
+    infomax      = InfoMaxTransformer(vocab_size, d_model, nhead, num_layers, ff_dim, dropout)
 
     opt_base     = torch.optim.Adam(baseline.parameters(), lr=1e-4)
     opt_info     = torch.optim.Adam(infomax.parameters(), lr=1e-4)
@@ -159,7 +157,7 @@ def run_experiment(d_model=256, nhead=4, num_layers=3, ff_dim=1024, dropout=0.1,
 
         # Qualitative Sample
         sample, target = next(iter(val_loader))
-        sample, target = sample.to(DEVICE), target.to(DEVICE)
+        sample, target = sample.to(device), target.to(device)
 
         print("RAW input:", sample[0].tolist())
         print("TRIPLETS:", decode_triplets(sample[0].tolist()))

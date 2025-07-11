@@ -54,8 +54,7 @@ class TinyTransformer(nn.Module):
         padding_mask : (batch, seq) True on PAD
         """
         x = self.embed(tok)                 # (batch, seq, d_model)
-        x = self.pos(x.transpose(0,1))      # → (seq, batch, d_model)
-        x = x.transpose(0,1)                # back to (batch, seq, d_model)
+        x = self.pos(x)
 
         for layer in self.layers:
             x = layer(x, padding_mask)
