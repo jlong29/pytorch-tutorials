@@ -172,3 +172,4 @@ cython_debug/
 
 # Temporary files
 notebooks/attention_maps/
+notebooks/torchviz/
